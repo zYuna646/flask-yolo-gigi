@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 from flask_cors import CORS  # Import CORS
 import os
 import cv2
+import base64
 import numpy as np
 from PIL import Image
 import torch
@@ -38,13 +39,17 @@ def upload_file():
     # Process the image
     processed_image_path, unique_labels = process_image(filepath)
 
-    # Create a response that includes the processed image and unique labels
+    # Convert the processed image to base64
+    with open(processed_image_path, "rb") as image_file:
+        base64_encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+
+    # Create a response that includes the base64 image data and unique labels
     response = {
         "labels": unique_labels,
-        "image_url": processed_image_path  # In a real API, you might need to provide a proper URL for external access
+        "image_data": base64_encoded_image  # Base64 encoded image
     }
 
-    # Return the processed image along with label list as JSON response
+    # Return the processed image data along with label list as JSON response
     return jsonify(response), 200
 
 def process_image(image_path):
