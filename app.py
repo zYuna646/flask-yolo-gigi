@@ -10,7 +10,7 @@ from ultralytics import YOLO
 app = Flask(__name__)
 
 # Enable CORS for the Flask app
-CORS(app, origins=['https://mi.delirwan.com'])  # Allow all origins, or use `CORS(app, origins=["your-origin"])` to specify origins
+CORS(app, resources={r"/*": {"origins": "*"}})  # This allows requests from any origin
 
 # Load your custom YOLOv8 model from the .pt file
 MODEL_PATH = './model.pt'  # Adjust the path to your .pt file
