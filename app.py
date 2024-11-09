@@ -36,10 +36,16 @@ def upload_file():
     file.save(filepath)
 
     # Process the image
-    processed_image_path = process_image(filepath)
+    processed_image_path, unique_labels = process_image(filepath)
 
-    # Return the processed image
-    return send_file(processed_image_path, mimetype='image/jpeg')
+    # Create a response that includes the processed image and unique labels
+    response = {
+        "labels": unique_labels,
+        "image_url": processed_image_path  # In a real API, you might need to provide a proper URL for external access
+    }
+
+    # Return the processed image along with label list as JSON response
+    return jsonify(response), 200
 
 def process_image(image_path):
     # Read the image using OpenCV
@@ -51,6 +57,7 @@ def process_image(image_path):
     # Get bounding boxes and labels
     detections = results[0].boxes  # Get detection boxes
     names = model.names  # Get class names
+    unique_labels = set()  # Set to store unique labels
 
     # Loop through the detections
     for detection in detections:
@@ -58,6 +65,9 @@ def process_image(image_path):
         x1, y1, x2, y2 = map(int, detection.xyxy[0].tolist())  # Convert coordinates to integers
         conf = detection.conf[0].item()  # Confidence score
         cls = int(detection.cls[0].item())  # Class index
+
+        # Add class name to the unique labels set
+        unique_labels.add(names[cls])
 
         # Draw a bounding box
         cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)  # Blue box
@@ -70,7 +80,7 @@ def process_image(image_path):
     processed_image_path = os.path.join(PROCESSED_FOLDER, 'processed_' + os.path.basename(image_path))
     cv2.imwrite(processed_image_path, img)  # Save the annotated image
 
-    return processed_image_path
+    return processed_image_path, list(unique_labels)  # Return path and unique labels as list
 
 if __name__ == '__main__':
     app.run(debug=True)
